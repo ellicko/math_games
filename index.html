@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Bingo</title>
+    <style>
+        table {
+            border-collapse: collapse;
+        }
+        td {
+            border: 1px solid black;
+            padding: 20px;
+            text-align: center;
+        }
+        .disabled {
+            background-color: green;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Math Bingo</h1>
+    <table id="bingoGrid"></table>
+    <p id="problem">Solve: </p>
+	<div id="timer">Time remaining: 3:00</div>
+
+    <script>
+        const bingoGrid = document.getElementById('bingoGrid');
+        const problem = document.getElementById('problem');
+        const gridSize = 5;
+        let answer;
+
+	function startTimer() {
+    let timeRemaining = 3 * 60; // 3 minutes in seconds
+    let timerDisplay = document.getElementById('timer');
+    
+    const updateTimer = () => {
+        let minutes = Math.floor(timeRemaining / 60);
+        let seconds = timeRemaining % 60;
+        
+        timerDisplay.innerText = `Time remaining: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        if (timeRemaining === 0) {
+            clearInterval(timerInterval);
+            alert('You Failed. Game Over');
+            window.location.reload(); // Restart the game
+        } else {
+            timeRemaining--;
+        }
+    };
+
+    let timerInterval = setInterval(updateTimer, 1000); // Update every second
+}
+
+
+        function createGrid() {
+            const uniqueNumbers = Array.from({ length: 50 }, (_, i) => i + 1).sort(() => Math.random() - 0.5).slice(0, 25);
+            let index = 0;
+
+            for (let i = 0; i < gridSize; i++) {
+                const row = document.createElement('tr');
+                for (let j = 0; j < gridSize; j++) {
+                    const cell = document.createElement('td');
+                    cell.textContent = uniqueNumbers[index++];
+                    cell.addEventListener('click', () => checkAnswer(cell));
+                    row.appendChild(cell);
+                }
+                bingoGrid.appendChild(row);
+            }
+        }
+
+        function generateProblem() {
+            const num1 = Math.floor(Math.random() * 25) + 1;
+            const num2 = Math.floor(Math.random() * 25) + 1;
+            answer = num1 + num2;
+            problem.textContent = `Solve: ${num1} + ${num2}`;
+
+            let availableCells = Array.from(bingoGrid.getElementsByTagName('td')).filter(cell => !cell.classList.contains('disabled'));
+            let randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+            randomCell.textContent = answer;
+        }
+
+        function checkAnswer(cell) {
+            if (parseInt(cell.textContent) === answer) {
+                cell.classList.add('disabled');
+                if (checkWinCondition()) {
+                    alert("Congratulations! You Win. Game Over.");
+                    location.reload();
+                } else {
+                    generateProblem();
+                }
+            } else {
+                cell.style.backgroundColor = "red";
+            }
+        }
+
+        function checkWinCondition() {
+            for (let i = 0; i < gridSize; i++) {
+                const row = Array.from(bingoGrid.rows[i].cells);
+                const col = Array.from({ length: gridSize }, (_, j) => bingoGrid.rows[j].cells[i]);
+                const diag1 = Array.from({ length: gridSize }, (_, j) => bingoGrid.rows[j].cells[j]);
+                const diag2 = Array.from({ length: gridSize }, (_, j) => bingoGrid.rows[j].cells[gridSize - 1 - j]);
+
+                if (checkLine(row) || checkLine(col) || checkLine(diag1) || checkLine(diag2)) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function checkLine(line) {
+            return line.every(cell => cell.classList.contains('disabled'));
+        }
+
+        createGrid();
+        generateProblem();
+    	startTimer();
+    </script>
+</body>
+</html>
+
+
